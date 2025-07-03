@@ -3,7 +3,6 @@ import jwt from "jsonwebtoken";
 export const generateTokenAndSetCookie = (user, res) => {
 	const payload = {
 		id: user._id,
-		username: user.username,
 	};
 
 	const token = jwt.sign(payload, process.env.JWT_SECRET, {

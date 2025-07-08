@@ -2,6 +2,7 @@ import express from "express";
 import cookieParser from "cookie-parser";
 
 import authRouter from "./routes/auth.router.js";
+import userRouter from "./routes/user.router.js";
 
 const app = express();
 
@@ -14,6 +15,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/auth", authRouter);
+app.use("/users", userRouter);
 
 app.use((err, req, res, next) => {
 	console.error(err.stack);

@@ -1,8 +1,11 @@
+import crypto from "node:crypto";
+
 import expressAsyncHandler from "express-async-handler";
 import { validationResult } from "express-validator";
 import bcrypt from "bcryptjs";
 
 import User from "../models/user.model.js";
+import ResetToken from "../models/password-reset-token.model.js";
 
 import { generateTokenAndSetCookie } from "../lib/utils/token.utils.js";
 
@@ -70,4 +73,73 @@ export const login = expressAsyncHandler(async (req, res) => {
 	generateTokenAndSetCookie(existingEmail, res);
 
 	res.status(200).json({ message: "Logged in successfully!" });
+});
+
+export const requestPasswordResetLink = expressAsyncHandler(
+	async (req, res) => {
+		// Check for any validation errors
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			return res.status(400).json({ errors: errors.array() });
+		}
+
+		const { email } = req.body;
+
+		// Find user by email
+		const existingEmail = await User.findOne({ email });
+		if (!existingEmail) {
+			return res.status(404).json({ message: "User not found" });
+		}
+
+		// TODO: Change to send link via email, not just a regular response (For security)
+
+		let token = await ResetToken.findOne({ userId: existingEmail._id });
+		if (!token) {
+			token = await ResetToken.create({
+				userId: existingEmail._id,
+				token: crypto.randomBytes(32).toString("hex"),
+			});
+		}
+
+		const link = `${process.env.BASE_URL}/auth/reset-password/${existingEmail._id}/${token.token}`;
+
+		res.status(200).json({ link });
+	}
+);
+
+export const resetPassword = expressAsyncHandler(async (req, res) => {
+	// Check for any validation errors
+	const errors = validationResult(req);
+	if (!errors.isEmpty()) {
+		return res.status(400).json({ errors: errors.array() });
+	}
+
+	const { userId, token } = req.params;
+	const { password } = req.body;
+
+	const existingUser = await User.findById(userId);
+	if (!existingUser) {
+		return res
+			.status(404)
+			.json({ message: "Link is invalid or has expired." });
+	}
+
+	const existingToken = await ResetToken.findOne({ userId, token });
+	if (!existingToken) {
+		return res
+			.status(404)
+			.json({ message: "Link is invalid or has expired." });
+	}
+
+	// Hash new password
+	const salt = await bcrypt.genSalt(10);
+	const hashedPassword = await bcrypt.hash(password, salt);
+
+	// Update user with new password
+	existingUser.password = hashedPassword;
+	await existingUser.save();
+
+	await ResetToken.findOneAndDelete({ userId: existingUser._id });
+
+	res.status(200).json({ message: "Password reset successfully!" });
 });

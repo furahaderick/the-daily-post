@@ -17,3 +17,17 @@ export const loginValidator = [
 		.withMessage("Please enter a valid email address"),
 	body("password").exists().withMessage("Password is required"),
 ];
+
+export const passwordResetLinkValidator = [
+	body("email")
+		.exists({ values: "falsy" })
+		.withMessage("Email is required")
+		.isEmail()
+		.withMessage("Please enter a valid email address"),
+];
+
+export const resetPasswordValidator = [
+	body("password")
+		.isLength({ min: 6 })
+		.withMessage("Password must be atleast 6 characters"),
+];

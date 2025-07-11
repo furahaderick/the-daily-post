@@ -1,8 +1,11 @@
+import crypto from "node:crypto";
+
 import expressAsyncHandler from "express-async-handler";
 import { validationResult } from "express-validator";
 import bcrypt from "bcryptjs";
 
 import User from "../models/user.model.js";
+import VerifyToken from "../models/email-verify-token.model.js";
 
 import { generateTokenAndSetCookie } from "../lib/utils/token.utils.js";
 
@@ -32,14 +35,25 @@ export const register = expressAsyncHandler(async (req, res) => {
 	const hashedPassword = await bcrypt.hash(password, salt);
 
 	// Create new user
-	await User.create({
+	const newUser = await User.create({
 		fullName,
 		username,
 		email,
 		password: hashedPassword,
 	});
 
-	res.status(201).json({ message: "User registered successfully!" });
+	// Generate email verification link
+	// TODO: To be sent via email
+	const token = await VerifyToken.create({
+		userId: newUser._id,
+		token: crypto.randomBytes(32).toString("hex"),
+	});
+
+	const link = `${process.env.BASE_URL}/auth/verify/${newUser._id}/${token.token}`;
+
+	res.status(201).json({
+		message: `User registered successfully. Follow this link to verify your email: ${link}`,
+	});
 });
 
 export const login = expressAsyncHandler(async (req, res) => {
@@ -70,4 +84,21 @@ export const login = expressAsyncHandler(async (req, res) => {
 	generateTokenAndSetCookie(existingEmail, res);
 
 	res.status(200).json({ message: "Logged in successfully!" });
+});
+
+export const verifyEmail = expressAsyncHandler(async (req, res) => {
+	const { userId, token } = req.params;
+
+	const user = await User.findById(userId);
+	if (!user) return res.status(400).json({ message: "Invalid link" });
+
+	const verifyToken = await VerifyToken.findOne({ userId: user._id, token });
+	if (!token) return res.status(400).json({ message: "Invalid link" });
+
+	await User.findByIdAndUpdate(userId, { verified: true });
+	await VerifyToken.findOneAndDelete(verifyToken._id);
+
+	res.status(200).json({
+		message: "Your email has been verified successfully",
+	});
 });

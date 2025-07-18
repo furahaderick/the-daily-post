@@ -60,3 +60,22 @@ export const setPasswordValidator = [
 		.custom((value, { req }) => value === req.body.newPassword)
 		.withMessage("New password and confirmation do not match."),
 ];
+
+/* Blog Post Validation Chains */
+export const createBlogPostValidator = [
+	body("title").exists({ values: "falsy" }).withMessage("A title is required"),
+	body("content")
+		.exists({ values: "falsy" })
+		.withMessage("Content is required"),
+];
+
+export const updateBlogPostValidator = [
+	body("title")
+		.optional()
+		.notEmpty()
+		.withMessage("Please enter a valid title"),
+	body("content")
+		.optional()
+		.notEmpty()
+		.withMessage("Please enter valid content"),
+];

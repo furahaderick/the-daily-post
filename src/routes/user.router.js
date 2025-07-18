@@ -5,9 +5,13 @@ import { authenticate } from "../middleware/token-verifier.middleware.js";
 import {
 	getLoggedInUser,
 	updateLoggedInUser,
+	changePassword,
 } from "../controllers/user.controller.js";
 
-import { updateProfileValidator } from "../middleware/validator.middleware.js";
+import {
+	updateProfileValidator,
+	setPasswordValidator,
+} from "../middleware/validator.middleware.js";
 
 const userRouter = express.Router();
 
@@ -17,6 +21,14 @@ userRouter.post(
 	authenticate,
 	updateProfileValidator,
 	updateLoggedInUser
+);
+
+// Change password while authenticated
+userRouter.post(
+	"/me/set-password",
+	authenticate,
+	setPasswordValidator,
+	changePassword
 );
 
 export default userRouter;

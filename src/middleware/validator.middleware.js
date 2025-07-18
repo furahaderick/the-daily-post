@@ -46,3 +46,17 @@ export const updateProfileValidator = [
 		.isEmail()
 		.withMessage("Please enter a valid email address"),
 ];
+
+export const setPasswordValidator = [
+	body("currentPassword")
+		.exists()
+		.withMessage("Your current password is required"),
+	body("newPassword")
+		.exists()
+		.withMessage("A new password is required")
+		.isLength({ min: 6 })
+		.withMessage("A password must be atleast 6 characters long"),
+	body("confirmNewPassword")
+		.custom((value, { req }) => value === req.body.newPassword)
+		.withMessage("New password and confirmation do not match."),
+];

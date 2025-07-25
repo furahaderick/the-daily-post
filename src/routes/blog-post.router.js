@@ -14,7 +14,7 @@ import {
 	removeTagsFromPost,
 } from "../controllers/blog-post.controller.js";
 import {
-	createBlogPostValidator,
+	blogPostValidator,
 	updateBlogPostValidator,
 	tagValidator,
 } from "../middleware/validator.middleware.js";
@@ -27,9 +27,13 @@ blogPostRouter.post(
 	"/",
 	authenticate,
 	authorizeRoles(["author", "admin"]),
-	createBlogPostValidator,
+	blogPostValidator,
 	createBlogPost
 );
+
+blogPostRouter.get("/", fetchPublishedPosts);
+
+blogPostRouter.get("/:blogPostId/read", readBlogPost);
 
 blogPostRouter.post(
 	"/:blogPostId/tags",
@@ -51,6 +55,7 @@ blogPostRouter.put(
 	"/:blogPostId/publish",
 	authenticate,
 	authorizeRoles(["author"]),
+    blogPostValidator,
 	publishBlogPost
 );
 
@@ -61,13 +66,7 @@ blogPostRouter.put(
 	unpublishBlogPost
 );
 
-blogPostRouter.get("/drafts", authenticate, fetchDraftPosts);
-
-blogPostRouter.get("/:blogPostId/read", readBlogPost);
-
 blogPostRouter.get("/:blogPostId", fetchBlogPost);
-
-blogPostRouter.get("/", fetchPublishedPosts);
 
 blogPostRouter.put(
 	"/:blogPostId",
@@ -83,5 +82,7 @@ blogPostRouter.delete(
 	authorizeRoles(["author", "admin"]),
 	deleteBlogPost
 );
+
+blogPostRouter.get("/drafts", authenticate, fetchDraftPosts);
 
 export default blogPostRouter;

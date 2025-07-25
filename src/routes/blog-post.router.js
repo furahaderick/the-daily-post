@@ -12,6 +12,8 @@ import {
 	deleteBlogPost,
 	addTagsToPost,
 	removeTagsFromPost,
+    getPostEditVersion,
+    getBlogPostVersions
 } from "../controllers/blog-post.controller.js";
 import {
 	blogPostValidator,
@@ -32,6 +34,10 @@ blogPostRouter.post(
 );
 
 blogPostRouter.get("/", fetchPublishedPosts);
+
+blogPostRouter.get("/:blogPostId/versions/:versionNumber", getPostEditVersion);
+
+blogPostRouter.get("/:blogPostId/versions", getBlogPostVersions);
 
 blogPostRouter.get("/:blogPostId/read", readBlogPost);
 

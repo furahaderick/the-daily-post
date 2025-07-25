@@ -62,7 +62,7 @@ export const setPasswordValidator = [
 ];
 
 /* Blog Post Validation Chains */
-export const createBlogPostValidator = [
+export const blogPostValidator = [
 	body("title").exists({ values: "falsy" }).withMessage("A title is required"),
 	body("content")
 		.exists({ values: "falsy" })

@@ -3,6 +3,7 @@ import { validationResult } from "express-validator";
 import { marked } from "marked";
 
 import BlogPost from "../models/blog-post.model.js";
+import BlogPostVersion from "../models/blog-post-version.model.js";
 
 export const createBlogPost = expressAsyncHandler(async (req, res) => {
 	// Validate inputs
@@ -24,20 +25,41 @@ export const createBlogPost = expressAsyncHandler(async (req, res) => {
 });
 
 export const publishBlogPost = expressAsyncHandler(async (req, res) => {
+	const errors = validationResult(req);
+	if (!errors.isEmpty()) {
+		return res.status(400).json({ errors: errors.array() });
+	}
+
+	const { title, content } = req.body;
 	const { blogPostId } = req.params;
 
-	const blogPost = await BlogPost.findById(blogPostId);
-	if (!blogPost || blogPost.state === "published") {
+	const currentBlogPost = await BlogPost.findById(blogPostId);
+	if (!currentBlogPost || currentBlogPost.state === "published") {
 		return res
 			.status(404)
 			.json({ message: "Blog post not found or Already published" });
 	}
 
-	blogPost.state = "published";
-	blogPost.publishedAt = new Date();
-	await blogPost.save();
+	// Create a new version entry
+	await BlogPostVersion.create({
+		postId: currentBlogPost._id,
+		versionNumber:
+			(await BlogPostVersion.countDocuments({
+				postId: currentBlogPost._id,
+			})) + 1,
+		title: currentBlogPost.title,
+		content: currentBlogPost.content,
+	});
 
-	res.status(200).json({ message: "Blog post published successfully" });
+	currentBlogPost.title = title;
+	currentBlogPost.content = content;
+	currentBlogPost.state = "published";
+	currentBlogPost.publishedAt = new Date();
+	await currentBlogPost.save();
+
+	res.status(200).json({
+		message: "Blog post published and version saved successfully",
+	});
 });
 
 export const unpublishBlogPost = expressAsyncHandler(async (req, res) => {
@@ -116,6 +138,10 @@ export const updateBlogPost = expressAsyncHandler(async (req, res) => {
 			.json({ message: "You can only edit your own posts" });
 	}
 
+	if (blogPost.state !== "draft") {
+		return res.status(400).json({ message: "Only drafts can be edited" });
+	}
+
 	await BlogPost.findByIdAndUpdate(blogPostId, req.body);
 
 	res.status(200).json({ message: "Blog post updated successfully" });
@@ -180,4 +206,31 @@ export const removeTagsFromPost = expressAsyncHandler(async (req, res) => {
 	await blogPost.save();
 
 	res.status(200).json({ message: "Blog post tags removed successfully" });
+});
+
+export const getPostEditVersion = expressAsyncHandler(async (req, res) => {
+	const { blogPostId, versionNumber } = req.params;
+
+	const blogPostVersion = await BlogPostVersion.findOne({
+		postId: blogPostId,
+		versionNumber,
+	});
+
+	if (!blogPostVersion) {
+		return res
+			.status(404)
+			.json({ message: "The specified version doesn't exist" });
+	}
+
+	res.status(200).json(blogPostVersion);
+});
+
+export const getBlogPostVersions = expressAsyncHandler(async (req, res) => {
+	const { blogPostId } = req.params;
+
+	const blogPostVersions = await BlogPostVersion.find({
+		postId: blogPostId,
+	}).sort({ versionNumber: -1 });
+
+	res.status(200).json(blogPostVersions);
 });

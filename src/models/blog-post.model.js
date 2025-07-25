@@ -27,6 +27,7 @@ const blogPostSchema = new mongoose.Schema(
 		publishedAt: {
 			type: Date,
 		},
+		comments: [{ type: mongoose.Schema.Types.ObjectId, ref: "Comment" }],
 	},
 	{ timestamps: true }
 );

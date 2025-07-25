@@ -12,8 +12,11 @@ import {
 	deleteBlogPost,
 	addTagsToPost,
 	removeTagsFromPost,
-    getPostEditVersion,
-    getBlogPostVersions
+	getPostEditVersion,
+	getBlogPostVersions,
+	addCommentToPost,
+	updateComment,
+	deleteComment,
 } from "../controllers/blog-post.controller.js";
 import {
 	blogPostValidator,
@@ -37,9 +40,22 @@ blogPostRouter.get("/", fetchPublishedPosts);
 
 blogPostRouter.get("/:blogPostId/versions/:versionNumber", getPostEditVersion);
 
+blogPostRouter.put(
+	"/:blogPostId/comments/:commentId",
+	authenticate,
+	updateComment
+);
+blogPostRouter.delete(
+	"/:blogPostId/comments/:commentId",
+	authenticate,
+	deleteComment
+);
+
 blogPostRouter.get("/:blogPostId/versions", getBlogPostVersions);
 
 blogPostRouter.get("/:blogPostId/read", readBlogPost);
+
+blogPostRouter.post("/:blogPostId/comments", authenticate, addCommentToPost);
 
 blogPostRouter.post(
 	"/:blogPostId/tags",
@@ -61,7 +77,7 @@ blogPostRouter.put(
 	"/:blogPostId/publish",
 	authenticate,
 	authorizeRoles(["author"]),
-    blogPostValidator,
+	blogPostValidator,
 	publishBlogPost
 );
 

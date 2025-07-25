@@ -15,6 +15,14 @@ const blogPostSchema = new mongoose.Schema(
 			ref: "User",
 			required: true,
 		},
+		state: {
+			type: String,
+			enum: ["draft", "published"],
+			default: "draft",
+		},
+		publishedAt: {
+			type: Date,
+		},
 	},
 	{ timestamps: true }
 );

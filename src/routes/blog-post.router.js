@@ -2,9 +2,12 @@ import express from "express";
 
 import {
 	createBlogPost,
+	publishBlogPost,
+	unpublishBlogPost,
 	fetchBlogPost,
+	fetchDraftPosts,
 	readBlogPost,
-	fetchAllBlogPosts,
+	fetchPublishedPosts,
 	updateBlogPost,
 	deleteBlogPost,
 } from "../controllers/blog-post.controller.js";
@@ -25,15 +28,32 @@ blogPostRouter.post(
 	createBlogPost
 );
 
-blogPostRouter.get("/:blogPostId", fetchBlogPost);
+blogPostRouter.put(
+	"/:blogPostId/publish",
+    authenticate,
+	authorizeRoles(["author"]),
+	publishBlogPost
+);
+
+blogPostRouter.put(
+	"/:blogPostId/unpublish",
+    authenticate,
+	authorizeRoles(["author", "admin"]),
+	unpublishBlogPost
+);
+
+blogPostRouter.get("/drafts", authenticate, fetchDraftPosts);
+
 blogPostRouter.get("/:blogPostId/read", readBlogPost);
 
-blogPostRouter.get("/", fetchAllBlogPosts);
+blogPostRouter.get("/:blogPostId", fetchBlogPost);
+
+blogPostRouter.get("/", fetchPublishedPosts);
 
 blogPostRouter.put(
 	"/:blogPostId",
 	authenticate,
-	authorizeRoles(["author", "admin"]),
+	authorizeRoles(["author"]),
 	updateBlogPostValidator,
 	updateBlogPost
 );

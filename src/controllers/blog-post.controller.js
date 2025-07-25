@@ -23,6 +23,40 @@ export const createBlogPost = expressAsyncHandler(async (req, res) => {
 	res.status(201).json({ message: "Blog post created successfully" });
 });
 
+export const publishBlogPost = expressAsyncHandler(async (req, res) => {
+	const { blogPostId } = req.params;
+
+	const blogPost = await BlogPost.findById(blogPostId);
+	if (!blogPost || blogPost.state === "published") {
+		return res
+			.status(404)
+			.json({ message: "Blog post not found or Already published" });
+	}
+
+	blogPost.state = "published";
+	blogPost.publishedAt = new Date();
+	await blogPost.save();
+
+	res.status(200).json({ message: "Blog post published successfully" });
+});
+
+export const unpublishBlogPost = expressAsyncHandler(async (req, res) => {
+	const { blogPostId } = req.params;
+
+	const blogPost = await BlogPost.findById(blogPostId);
+	if (!blogPost || blogPost.state === "draft") {
+		return res
+			.status(404)
+			.json({ message: "Blog post not found or Already a draft" });
+	}
+
+	blogPost.state = "draft";
+	blogPost.publishedAt = null;
+	await blogPost.save();
+
+	res.status(200).json({ message: "Blog post unpublished successfully" });
+});
+
 export const fetchBlogPost = expressAsyncHandler(async (req, res) => {
 	const { blogPostId } = req.params;
 
@@ -49,9 +83,19 @@ export const readBlogPost = expressAsyncHandler(async (req, res) => {
 	res.status(200).send(htmlContent);
 });
 
-export const fetchAllBlogPosts = expressAsyncHandler(async (req, res) => {
-	const allPosts = await BlogPost.find();
+export const fetchPublishedPosts = expressAsyncHandler(async (req, res) => {
+	const allPosts = await BlogPost.find({ state: "published" }).sort({
+		publishedAt: -1,
+	});
 	res.status(200).json(allPosts);
+});
+
+export const fetchDraftPosts = expressAsyncHandler(async (req, res) => {
+	const drafts = await BlogPost.find({
+		state: "draft",
+		author: req.user?._id,
+	});
+	res.status(200).json(drafts);
 });
 
 export const updateBlogPost = expressAsyncHandler(async (req, res) => {
@@ -64,6 +108,12 @@ export const updateBlogPost = expressAsyncHandler(async (req, res) => {
 	const blogPost = await BlogPost.findById(blogPostId);
 	if (!blogPost) {
 		return res.status(404).json({ message: "Blog post not found" });
+	}
+
+	if (!blogPost.author.equals(req.user?.id)) {
+		return res
+			.status(400)
+			.json({ message: "You can only edit your own posts" });
 	}
 
 	await BlogPost.findByIdAndUpdate(blogPostId, req.body);

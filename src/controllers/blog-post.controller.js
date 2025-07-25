@@ -141,3 +141,43 @@ export const deleteBlogPost = expressAsyncHandler(async (req, res) => {
 
 	res.status(200).json({ message: "Blog post deleted successfully" });
 });
+
+export const addTagsToPost = expressAsyncHandler(async (req, res) => {
+	const errors = validationResult(req);
+	if (!errors.isEmpty()) {
+		return res.status(400).json({ errors: errors.array() });
+	}
+
+	const { blogPostId } = req.params;
+	const { tags } = req.body;
+
+	const blogPost = await BlogPost.findById(blogPostId);
+	if (!blogPost) {
+		return res.status(404).json({ message: "Blog post not found" });
+	}
+
+	blogPost.tags = Array.from(new Set([...blogPost.tags, ...tags]));
+	await blogPost.save();
+
+	res.status(200).json({ message: "Blog post tags added successfully" });
+});
+
+export const removeTagsFromPost = expressAsyncHandler(async (req, res) => {
+	const errors = validationResult(req);
+	if (!errors.isEmpty()) {
+		return res.status(400).json({ errors: errors.array() });
+	}
+
+	const { blogPostId } = req.params;
+	const { tags } = req.body;
+
+	const blogPost = await BlogPost.findById(blogPostId);
+	if (!blogPost) {
+		return res.status(404).json({ message: "Blog post not found" });
+	}
+
+	blogPost.tags = blogPost.tags.filter((tag) => !tags.includes(tag));
+	await blogPost.save();
+
+	res.status(200).json({ message: "Blog post tags removed successfully" });
+});

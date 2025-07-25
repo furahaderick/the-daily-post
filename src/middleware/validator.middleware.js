@@ -79,3 +79,19 @@ export const updateBlogPostValidator = [
 		.notEmpty()
 		.withMessage("Please enter valid content"),
 ];
+
+export const tagValidator = [
+	body("tags")
+		.exists()
+		.withMessage("Tags are required")
+		.isArray({ min: 1 })
+		.withMessage("Tags must be a non-empty array"),
+	body("tags.*")
+		.isString()
+		.withMessage("Each tag must be a string")
+		.trim()
+		.notEmpty()
+		.withMessage("Tags cannot be empty")
+		.isAlphanumeric()
+		.withMessage("Tags must be alphanumeric"),
+];

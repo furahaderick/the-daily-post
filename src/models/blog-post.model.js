@@ -10,6 +10,10 @@ const blogPostSchema = new mongoose.Schema(
 			type: String,
 			required: true,
 		},
+		tags: {
+			type: [String],
+			default: [],
+		},
 		author: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "User",

@@ -10,10 +10,13 @@ import {
 	fetchPublishedPosts,
 	updateBlogPost,
 	deleteBlogPost,
+	addTagsToPost,
+	removeTagsFromPost,
 } from "../controllers/blog-post.controller.js";
 import {
 	createBlogPostValidator,
 	updateBlogPostValidator,
+	tagValidator,
 } from "../middleware/validator.middleware.js";
 import { authenticate } from "../middleware/token-verifier.middleware.js";
 import { authorizeRoles } from "../middleware/require-roles.middleware.js";
@@ -28,16 +31,32 @@ blogPostRouter.post(
 	createBlogPost
 );
 
+blogPostRouter.post(
+	"/:blogPostId/tags",
+	authenticate,
+	authorizeRoles(["author"]),
+	tagValidator,
+	addTagsToPost
+);
+
+blogPostRouter.delete(
+	"/:blogPostId/tags",
+	authenticate,
+	authorizeRoles(["author"]),
+	tagValidator,
+	removeTagsFromPost
+);
+
 blogPostRouter.put(
 	"/:blogPostId/publish",
-    authenticate,
+	authenticate,
 	authorizeRoles(["author"]),
 	publishBlogPost
 );
 
 blogPostRouter.put(
 	"/:blogPostId/unpublish",
-    authenticate,
+	authenticate,
 	authorizeRoles(["author", "admin"]),
 	unpublishBlogPost
 );

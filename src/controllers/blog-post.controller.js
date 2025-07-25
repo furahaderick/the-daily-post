@@ -1,5 +1,6 @@
 import expressAsyncHandler from "express-async-handler";
 import { validationResult } from "express-validator";
+import { marked } from "marked";
 
 import BlogPost from "../models/blog-post.model.js";
 
@@ -31,6 +32,21 @@ export const fetchBlogPost = expressAsyncHandler(async (req, res) => {
 	}
 
 	res.status(200).json(blogPost);
+});
+
+// TODO: Add an interface for submitting markdown files too
+
+export const readBlogPost = expressAsyncHandler(async (req, res) => {
+	const { blogPostId } = req.params;
+
+	const blogPost = await BlogPost.findById(blogPostId);
+	if (!blogPost) {
+		return res.status(404).json({ message: "Blog post not found" });
+	}
+
+	const htmlContent = await marked.parse(blogPost.content);
+
+	res.status(200).send(htmlContent);
 });
 
 export const fetchAllBlogPosts = expressAsyncHandler(async (req, res) => {

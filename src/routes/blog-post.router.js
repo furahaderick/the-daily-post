@@ -3,6 +3,7 @@ import express from "express";
 import {
 	createBlogPost,
 	fetchBlogPost,
+	readBlogPost,
 	fetchAllBlogPosts,
 	updateBlogPost,
 	deleteBlogPost,
@@ -23,8 +24,12 @@ blogPostRouter.post(
 	createBlogPostValidator,
 	createBlogPost
 );
+
 blogPostRouter.get("/:blogPostId", fetchBlogPost);
+blogPostRouter.get("/:blogPostId/read", readBlogPost);
+
 blogPostRouter.get("/", fetchAllBlogPosts);
+
 blogPostRouter.put(
 	"/:blogPostId",
 	authenticate,

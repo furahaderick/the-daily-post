@@ -1,4 +1,4 @@
-import { body } from "express-validator";
+import { body, query } from "express-validator";
 
 export const registerValidator = [
 	body("fullName").exists().withMessage("Your fullname is required"),
@@ -94,4 +94,8 @@ export const tagValidator = [
 		.withMessage("Tags cannot be empty")
 		.isAlphanumeric()
 		.withMessage("Tags must be alphanumeric"),
+];
+
+export const searchValidator = [
+	query("q").exists().withMessage("Missing query param 'q'"),
 ];

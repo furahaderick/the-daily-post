@@ -4,6 +4,7 @@ import { marked } from "marked";
 
 import BlogPost from "../models/blog-post.model.js";
 import BlogPostVersion from "../models/blog-post-version.model.js";
+import Comment from "../models/comment.model.js";
 
 export const createBlogPost = expressAsyncHandler(async (req, res) => {
 	// Validate inputs
@@ -82,7 +83,7 @@ export const unpublishBlogPost = expressAsyncHandler(async (req, res) => {
 export const fetchBlogPost = expressAsyncHandler(async (req, res) => {
 	const { blogPostId } = req.params;
 
-	const blogPost = await BlogPost.findById(blogPostId);
+	const blogPost = await BlogPost.findById(blogPostId).populate("comments");
 	if (!blogPost) {
 		return res.status(404).json({ message: "Blog post not found" });
 	}
@@ -233,4 +234,75 @@ export const getBlogPostVersions = expressAsyncHandler(async (req, res) => {
 	}).sort({ versionNumber: -1 });
 
 	res.status(200).json(blogPostVersions);
+});
+
+export const addCommentToPost = expressAsyncHandler(async (req, res) => {
+	const { text } = req.body;
+	const { blogPostId } = req.params;
+	const userId = req.user?._id;
+
+	if (!text) {
+		return res.status(400).json({ message: "Invalid comment text" });
+	}
+
+	const blogPost = await BlogPost.findById(blogPostId);
+	if (!blogPost) {
+		return res.status(404).json({ message: "Blog post not found" });
+	}
+
+	const newComment = await Comment.create({
+		text,
+		author: userId,
+		blogPost: blogPostId,
+	});
+	blogPost.comments.push(newComment._id);
+	await blogPost.save();
+
+	res.status(201).json({ message: "Comment added successfully" });
+});
+
+export const updateComment = expressAsyncHandler(async (req, res) => {
+	const { text } = req.body;
+	const { commentId } = req.params;
+	const userId = req.user?.id;
+
+	if (!text) {
+		return res.status(400).json({ message: "Invalid comment text" });
+	}
+
+	const comment = await Comment.findById(commentId);
+	if (!comment) {
+		return res.status(404).json({ message: "Comment not found" });
+	}
+
+	if (!comment.author.equals(userId)) {
+		return res.status(401).json({
+			message: "Unauthorized. You can edit your own comments only",
+		});
+	}
+
+	comment.text = text;
+	await comment.save();
+
+	res.status(200).json({ message: "Comment updated successfully" });
+});
+
+export const deleteComment = expressAsyncHandler(async (req, res) => {
+	const { commentId } = req.params;
+	const userId = req.user?.id;
+
+	const comment = await Comment.findById(commentId);
+	if (!comment) {
+		return res.status(404).json({ message: "Comment not found" });
+	}
+
+	if (!comment.author.equals(userId)) {
+		return res.status(401).json({
+			message: "Unauthorized. You can delete your own comments only",
+		});
+	}
+
+	await Comment.findByIdAndDelete(commentId);
+
+	res.status(200).json({ message: "Comment deleted successfully" });
 });

@@ -32,6 +32,9 @@ const blogPostSchema = new mongoose.Schema(
 	{ timestamps: true }
 );
 
+// Create a full-text index for searching purposes
+blogPostSchema.index({ title: "text", content: "text" });
+
 const BlogPost = mongoose.model("BlogPost", blogPostSchema);
 
 export default BlogPost;

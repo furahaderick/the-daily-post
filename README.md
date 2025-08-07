@@ -12,7 +12,7 @@ A clean, scalable backend API for a blogging platform built with **Node.js** and
 -  **User Management**: Admin CRUD, profile updates
 -  **Posts**: CRUD, drafts vs published, tagging, versioning
 -  **Comments**: Add/edit/delete comments
--  **Search**: Search by title, content, tags, authors
+-  **Search**: Search by title, content
 
 ---
 

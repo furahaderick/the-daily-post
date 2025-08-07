@@ -306,3 +306,19 @@ export const deleteComment = expressAsyncHandler(async (req, res) => {
 
 	res.status(200).json({ message: "Comment deleted successfully" });
 });
+
+export const fullTextSearch = expressAsyncHandler(async (req, res) => {
+	const errors = validationResult(req);
+	if (!errors.isEmpty()) {
+		return res.status(400).json({ errors: errors.array() });
+	}
+
+	// Search query
+	const { q } = req.query;
+
+	const results = await BlogPost.find({
+		$text: { $search: q },
+	});
+
+	res.status(200).json(results);
+});

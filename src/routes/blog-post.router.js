@@ -17,11 +17,13 @@ import {
 	addCommentToPost,
 	updateComment,
 	deleteComment,
+	fullTextSearch,
 } from "../controllers/blog-post.controller.js";
 import {
 	blogPostValidator,
 	updateBlogPostValidator,
 	tagValidator,
+	searchValidator,
 } from "../middleware/validator.middleware.js";
 import { authenticate } from "../middleware/token-verifier.middleware.js";
 import { authorizeRoles } from "../middleware/require-roles.middleware.js";
@@ -38,8 +40,11 @@ blogPostRouter.post(
 
 blogPostRouter.get("/", fetchPublishedPosts);
 
+blogPostRouter.get("/search", searchValidator, fullTextSearch);
+
 blogPostRouter.get("/:blogPostId/versions/:versionNumber", getPostEditVersion);
 
+// TODO: Find use for the 2 blogPostId route params below
 blogPostRouter.put(
 	"/:blogPostId/comments/:commentId",
 	authenticate,
